@@ -16,6 +16,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -25,7 +26,12 @@ public class Main extends Application {
     static ObservableList<MyToken> Tokens= FXCollections.observableArrayList();
     @Override
     public void start(Stage primaryStage) throws Exception{
-
+        Process process = Runtime.getRuntime().exec(
+                "cmd /c a.exe",
+                null,
+                new File("C:\\Users\\omark\\Desktop"));
+/*        Runtime.getRuntime().
+                exec("cmd /c cd desktop:\\ \"\" gcc no.c");*/
         primaryStage.setTitle("My Tiny Compiler");
         VBox ItemHolder=new VBox();
         ItemHolder.setSpacing(30);
@@ -42,6 +48,7 @@ public class Main extends Application {
             }
 
         });
+
         CodeTA.setMinSize(100,100);
         CodeTA.setMaxSize(800,800);
         CodeTA.setEditable(true);

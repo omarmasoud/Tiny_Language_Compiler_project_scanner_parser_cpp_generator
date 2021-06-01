@@ -49,12 +49,26 @@ public class CompilerScanner {
                 break;
                 case In_Comment:
                 {
-                    while (code.charAt(startindx)!='}'&&startindx<code.length())
+                    int startline=linenumber;
+                    int parantheses=1;
+                    while (startindx<code.length()&&parantheses!=0)
                     {
+                        if(code.charAt(startindx)=='\n')
+                            linenumber++;
+                        else if(code.charAt(startindx)=='{')
+                            parantheses++;
+                        else if(code.charAt(startindx)=='}')
+                            parantheses--;
+                        //if(startindx+1==code.length())break;
                         startindx++;
                         //tokenvalue+=code.charAt(startindx++);
                     }
-                    startindx++;
+                   if((startindx==code.length())&&parantheses!=0)
+                    {
+                        throw new Exception("comment not closed from line "+startline +" till line "+linenumber);
+                    }
+
+                   // startindx++;
                    // tokenType=TokenType.Comment;
                     currentstate=DFA_States.Start;
                 }
@@ -166,13 +180,22 @@ enum TokenType
 }
 class MyToken
 {
-   private TokenType tokenType;
+    private TokenType tokenType;
     private String tokenvalue;
     MyToken(TokenType tokenType,String tokenvalue)
     {
          this.tokenType=tokenType;
          this.tokenvalue=tokenvalue;
     }
+
+    public TokenType getTokenType() {
+        return tokenType;
+    }
+
+    public String getTokenvalue() {
+        return tokenvalue;
+    }
+
     public void PrintToken()
     {
        if(tokenType==TokenType.Empty||this==null)return;
