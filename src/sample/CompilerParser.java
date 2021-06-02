@@ -25,12 +25,18 @@ public class CompilerParser {
         }
         private void stmt_sequence() throws Exception {
             statement();
+                while (scanner.getPrevioustoken().getTokenType() == TokenType.Semicolon)
+                {
+                    match(TokenType.Semicolon);
+                    statement();
+                }
+                if(scanner.HasMoreTokens())
+                {
+                    throw new Exception("statements are separated only by semicolons");
+                }
 
-        while (scanner.getPrevioustoken().getTokenType()==TokenType.Semicolon)
-            {
-                match(TokenType.Semicolon);
-                statement();
-            }
+
+
 
         }
         private void statement() throws Exception {
@@ -193,6 +199,7 @@ public class CompilerParser {
                    match(TokenType.Closed_Bracket);
                }
                break;
+               default:throw new Exception ("not a factor type of token"+scanner.getPrevioustoken().getTokenvalue());
            }
             System.out.println("factor compiled successfully");
         }
