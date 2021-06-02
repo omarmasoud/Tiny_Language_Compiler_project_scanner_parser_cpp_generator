@@ -19,7 +19,7 @@ public class CompilerScanner {
     CompilerScanner(String CodeText)
     {
 
-        this.Special_Characters=new Character[]{'*','/','+','-','=','<',';','(',')',':','>','–'};
+        this.Special_Characters=new Character[]{'*','/','+','-','=','<',';','(',')','>','–'};
       //  ArrayList<Character>specialcharacters=new ArrayList()
         this.code=CodeText;
         Tokens=new ArrayList<MyToken>();
@@ -151,13 +151,17 @@ public class CompilerScanner {
                         tokenvalue=":=";
                         currentstate=DFA_States.End;
                     }
-                    else currentstate=DFA_States.Other;
+                    else//if the character found is unacceptable and un-tokenizable by the scanner
+                    {
+                        throw new Exception("untokenizable character "+code.charAt(startindx)+" at line "+linenumber);
+                    }
                 }
                 //todo fix the : special symbol
                 break;
             }
         }
         previoustoken=new MyToken(tokenType,tokenvalue);
+        Tokens.add(previoustoken);
         return previoustoken;
     }
    public boolean HasMoreTokens()

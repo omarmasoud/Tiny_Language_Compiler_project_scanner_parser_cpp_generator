@@ -35,12 +35,14 @@ public class Main extends Application {
                 exec("cmd /c cd desktop:\\ \"\" gcc no.c");*/
         primaryStage.setTitle("My Tiny Compiler");
         VBox ItemHolder=new VBox();
-        ItemHolder.setSpacing(30);
-        ItemHolder.setPadding(new Insets(30));
+        ItemHolder.setStyle("-fx-background-color:#262B29" +
+                "");
+        ItemHolder.setSpacing(15);
+        ItemHolder.setPadding(new Insets(15));
         HBox CodeTextField_and_Tokens_Table=new HBox();
         TextArea CodeTA=new TextArea();
 
-        CodeTA.setStyle("-fx-control-inner-background:#000000; -fx-background-color: green; " +
+        CodeTA.setStyle("-fx-control-inner-background:#000000; " +
                 "-fx-highlight-fill: #1FAA09; -fx-highlight-text-fill: red; -fx-text-fill: #0BF7FE;");
         CodeTA.setOnKeyPressed(e->{
             if(e.getCode()== KeyCode.DELETE)
@@ -50,8 +52,7 @@ public class Main extends Application {
 
         });
 
-        CodeTA.setMinSize(100,100);
-        CodeTA.setMaxSize(800,800);
+        CodeTA.setMinSize(1080,720);
         CodeTA.setEditable(true);
         TableView<MyToken> TokensTable=new TableView<MyToken>();
         TableColumn<MyToken,TokenType> TokenType=new TableColumn<>("Token Type");
@@ -72,29 +73,24 @@ public class Main extends Application {
             } catch (Exception exception) {
                 exception.printStackTrace();
             }
-
+            myscanner.ResetTokenizer();
             while(myscanner.HasMoreTokens())
- {
-     MyToken token= null;
-     try {
-         token = myscanner.NextToken();
-     } catch (Exception exception) {
-         exception.printStackTrace();
-     }
-     token.PrintToken();
-    Tokens.add(token);
- }
-   // TokensTable.setItems(Tokens);
+            {
+            try {
+            myscanner.NextToken();
+            } catch (Exception exception) {
+                //Todo msg box printing exception in red
+            exception.printStackTrace();
+
+            }
+            //token.PrintToken();
+             }
+
+
+            //todo table of tokentype _> token value
+            //todo call mysccanner.Tokens
 
         });
-/*        String newcode=new String();
-        Scanner sc=new Scanner(System.in);
-        newcode=sc.nextLine();
-        CompilerScanner scanner=new CompilerScanner(newcode);
-        while (scanner.HasMoreTokens())
-        {
-            scanner.NextToken().PrintToken();
-        }*/
         ItemHolder.getChildren().addAll(CodeTextField_and_Tokens_Table,GetTokensBt);
         primaryStage.setScene(new Scene(ItemHolder));
         primaryStage.show();

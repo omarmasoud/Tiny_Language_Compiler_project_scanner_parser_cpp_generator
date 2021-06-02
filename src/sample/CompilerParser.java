@@ -3,11 +3,13 @@ package sample;
 import java.util.ArrayList;
 
 public class CompilerParser {
-    CompilerScanner scanner;
-    ArrayList<String> program;
+     CompilerScanner scanner;
+     ArrayList<String> ProgramStatements;
+     ArrayList<String> identifiers;
     CompilerParser(CompilerScanner scanner){
         this.scanner=scanner;
-        program=new ArrayList<>();
+        ProgramStatements=new ArrayList<>();
+        identifiers=new ArrayList<>();
     }
     public void parse() throws Exception {
             scanner.ResetTokenizer();
@@ -24,19 +26,16 @@ public class CompilerParser {
             System.out.println("program compiled successfully");
         }
         private void stmt_sequence() throws Exception {
-            statement();
+                statement();
                 while (scanner.getPrevioustoken().getTokenType() == TokenType.Semicolon)
                 {
                     match(TokenType.Semicolon);
                     statement();
                 }
-                if(scanner.HasMoreTokens())
+                if(scanner.HasMoreTokens()&&scanner.getPrevioustoken().getTokenType()!=TokenType.Reserved_Keyword)
                 {
-                    throw new Exception("statements are separated only by semicolons");
+                    throw new Exception("statements are separated only by semicolons "+scanner.getPrevioustoken().getTokenvalue());
                 }
-
-
-
 
         }
         private void statement() throws Exception {
@@ -45,19 +44,15 @@ public class CompilerParser {
                 case Reserved_Keyword:{
                     switch (scanner.getPrevioustoken().getTokenvalue()) {
                         case "if" -> {
-                            match("if");
                             if_stmt();
                         }
                         case "repeat" -> {
-                            match("repeat");
                             repeat_stmt();
                         }
                         case "write" -> {
-                            match("write");
                             write_stmt();
                         }
                         case "read" -> {
-                            match("read");
                             read_stmt();
                         }
                         default -> throw new Exception("incorrect statement "+scanner.getPrevioustoken().getTokenvalue());
@@ -65,7 +60,6 @@ public class CompilerParser {
                 }break;
                 case Identifier:
                 {
-                    match(TokenType.Identifier);
                     assign_stmt();
                 }
                     break;
@@ -77,6 +71,7 @@ public class CompilerParser {
 
         }
         private void if_stmt() throws Exception {
+            match("if");
             exp();
            // scanner.PeekToken();
             match("then");
@@ -91,6 +86,7 @@ public class CompilerParser {
 
         }
         private void repeat_stmt() throws Exception {
+        match("repeat");
         stmt_sequence();
         match("until");
         exp();
@@ -98,18 +94,19 @@ public class CompilerParser {
 
         }
         private void assign_stmt() throws Exception {
-        match(TokenType.Assignment_Operator);
-        exp();
+            match(TokenType.Identifier);
+            match(TokenType.Assignment_Operator);
+            exp();
             System.out.println("assign statement compiled successfully");
-
         }
         private void write_stmt()throws Exception{
+            match("write");
             exp();
             System.out.println(" write statement compiled successfully");
-
         }
         private void read_stmt()throws Exception
         {
+            match("read");
             match(TokenType.Identifier);
             System.out.println("read statement compiled successfully");
         }
