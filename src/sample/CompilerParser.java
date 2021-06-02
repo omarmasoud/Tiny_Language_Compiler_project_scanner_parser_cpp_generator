@@ -18,6 +18,7 @@ public class CompilerParser {
 
         }
         private void program() throws Exception {
+            //get the first token of the program to begin compiling
             scanner.PeekToken();
             stmt_sequence();
             System.out.println("program compiled successfully");
@@ -27,7 +28,7 @@ public class CompilerParser {
 
         while (scanner.getPrevioustoken().getTokenType()==TokenType.Semicolon)
             {
-                scanner.PeekToken();
+                match(TokenType.Semicolon);
                 statement();
             }
 
@@ -38,36 +39,33 @@ public class CompilerParser {
                 case Reserved_Keyword:{
                     switch (scanner.getPrevioustoken().getTokenvalue()) {
                         case "if" -> {
-                            scanner.PeekToken();
+                            match("if");
                             if_stmt();
                         }
                         case "repeat" -> {
-                            scanner.PeekToken();
+                            match("repeat");
                             repeat_stmt();
                         }
                         case "write" -> {
-                            scanner.PeekToken();
+                            match("write");
                             write_stmt();
                         }
                         case "read" -> {
-                            scanner.PeekToken();
+                            match("read");
                             read_stmt();
                         }
-                        default -> throw new Exception("incorrect statement");
+                        default -> throw new Exception("incorrect statement "+scanner.getPrevioustoken().getTokenvalue());
                     }
                 }break;
                 case Identifier:
                 {
-                    scanner.PeekToken();
+                    match(TokenType.Identifier);
                     assign_stmt();
                 }
                     break;
                 default: {
-
                     throw new Exception("incorrect statement typing");
                 }
-
-
             }
             System.out.println("statement compiled successfully");
 
@@ -79,6 +77,7 @@ public class CompilerParser {
             stmt_sequence();
             if(scanner.getPrevioustoken().getTokenvalue().equals("else"))
             {
+                match("else");
                 stmt_sequence();
             }
             match("end");
@@ -107,27 +106,46 @@ public class CompilerParser {
         {
             match(TokenType.Identifier);
             System.out.println("read statement compiled successfully");
-
         }
         private void exp() throws Exception {
             simple_exp();
-            if (scanner.getPrevioustoken().getTokenType() == TokenType.Greater_Than_Operator ||
-                    scanner.getPrevioustoken().getTokenType() == TokenType.Less_Than_Operator ||
-                    scanner.getPrevioustoken().getTokenType() == TokenType.Equal_Operator)
+            switch (scanner.getPrevioustoken().getTokenType())
             {
-                scanner.PeekToken();
-                simple_exp();
+                case Greater_Than_Operator:
+                    match(TokenType.Greater_Than_Operator);
+                    simple_exp();
+                    break;
+                case Less_Than_Operator:
+                    match(TokenType.Less_Than_Operator);
+                    simple_exp();
+                    break;
+                case Equal_Operator:
+                    match(TokenType.Equal_Operator);
+                    simple_exp();
+                    break;
+                default:
+                    break;
             }
             System.out.println("exp compiled successfully");
-
         }
         private void simple_exp() throws Exception {
             term();
             while (scanner.getPrevioustoken().getTokenType()==TokenType.Addition_Operator||
                     scanner.getPrevioustoken().getTokenType()==TokenType.Subtraction_Operator)
             {
-                scanner.PeekToken();
-                term();
+                switch (scanner.getPrevioustoken().getTokenType())
+                {
+                    case Addition_Operator:
+                        match(TokenType.Addition_Operator);
+                        term();
+                        break;
+                    case Subtraction_Operator:
+                        match(TokenType.Subtraction_Operator);
+                        term();
+                        break;
+                    default:
+                        break;
+                }
             }
             System.out.println("simple exp compiled successfully");
 
@@ -138,30 +156,45 @@ public class CompilerParser {
             while (scanner.getPrevioustoken().getTokenType()==TokenType.Multiplication_Operator||
                     scanner.getPrevioustoken().getTokenType()==TokenType.Division_Operator)
             {
-                scanner.PeekToken();
-                factor();
+                switch (scanner.getPrevioustoken().getTokenType())
+                {
+                    case Multiplication_Operator:
+                        match(TokenType.Multiplication_Operator);
+                        factor();
+                        break;
+                    case Division_Operator:
+                        match(TokenType.Division_Operator);
+                        factor();
+                        break;
+                    default:
+                        break;
+                }
             }
             System.out.println("term compiled successfully");
-
         }
         private void factor() throws Exception
         {
            switch (scanner.getPrevioustoken().getTokenType())
            {
-               case NUM,Identifier:{
-                   scanner.PeekToken();
+               case NUM:
+               {
+                   match(TokenType.NUM);
+               }
+               break;
+               case Identifier:
+               {
+                   match(TokenType.Identifier);
                }
                break;
                case Open_Bracket:
                {
-                   scanner.PeekToken();
+                   match(TokenType.Open_Bracket);
                    exp();
                    match(TokenType.Closed_Bracket);
                }
                break;
            }
             System.out.println("factor compiled successfully");
-
         }
         private void match(TokenType expected)throws Exception
         {
