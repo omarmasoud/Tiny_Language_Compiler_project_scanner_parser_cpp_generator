@@ -26,6 +26,7 @@ public class Main extends Application {
     static ObservableList<MyToken> Tokens= FXCollections.observableArrayList();
     @Override
     public void start(Stage primaryStage) throws Exception{
+        primaryStage.setResizable(false);
         Process process = Runtime.getRuntime().exec(
                 "cmd /c a.exe",
                 null,
@@ -65,8 +66,14 @@ public class Main extends Application {
             code=CodeTA.getText();
 //            System.out.println(code);
            CompilerScanner myscanner=new CompilerScanner(code);
+           CompilerParser myparser=new CompilerParser(myscanner);
+            try {
+                myparser.parse();
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
 
- while(myscanner.HasMoreTokens())
+            while(myscanner.HasMoreTokens())
  {
      MyToken token= null;
      try {

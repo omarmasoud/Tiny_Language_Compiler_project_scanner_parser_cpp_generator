@@ -7,35 +7,179 @@ public class CompilerParser {
     ArrayList<String> program;
     CompilerParser(CompilerScanner scanner){
         this.scanner=scanner;
-        program=new ArrayList<String>();
+        program=new ArrayList<>();
     }
     public void parse() throws Exception {
-            ParseOptions parserstate=ParseOptions.start;
-            if(!scanner.HasMoreTokens()) return;
-            MyToken CurrentToken=scanner.NextToken();
-            switch (CurrentToken.getTokenType())
+            scanner.ResetTokenizer();
+           // ParseOptions parserstate=ParseOptions.start;
+            //if(!scanner.HasMoreTokens()) return;
+            //MyToken CurrentToken=scanner.NextToken();
+            program();
+
+        }
+        private void program() throws Exception {
+            scanner.PeekToken();
+            stmt_sequence();
+            System.out.println("program compiled successfully");
+        }
+        private void stmt_sequence() throws Exception {
+            statement();
+
+        while (scanner.getPrevioustoken().getTokenType()==TokenType.Semicolon)
             {
-                case Reserved_Keyword:
-                {
-                    if (CurrentToken.getTokenvalue()=="if")
-                    {
-                        parserstate=ParseOptions.if_statement;
-                    }
-                    else if (CurrentToken.getTokenvalue()=="then")
-                    {
-
-                    }
-                    else if (CurrentToken.getTokenvalue()=="else")
-                    {
-
-                    }
-                }
-
+                scanner.PeekToken();
+                statement();
             }
 
         }
+        private void statement() throws Exception {
+            switch (scanner.getPrevioustoken().getTokenType())
+            {
+                case Reserved_Keyword:{
+                    switch (scanner.getPrevioustoken().getTokenvalue()) {
+                        case "if" -> {
+                            scanner.PeekToken();
+                            if_stmt();
+                        }
+                        case "repeat" -> {
+                            scanner.PeekToken();
+                            repeat_stmt();
+                        }
+                        case "write" -> {
+                            scanner.PeekToken();
+                            write_stmt();
+                        }
+                        case "read" -> {
+                            scanner.PeekToken();
+                            read_stmt();
+                        }
+                        default -> throw new Exception("incorrect statement");
+                    }
+                }break;
+                case Identifier:
+                {
+                    scanner.PeekToken();
+                    assign_stmt();
+                }
+                    break;
+                default: {
+
+                    throw new Exception("incorrect statement typing");
+                }
+
+
+            }
+            System.out.println("statement compiled successfully");
+
+        }
+        private void if_stmt() throws Exception {
+            exp();
+           // scanner.PeekToken();
+            match("then");
+            stmt_sequence();
+            if(scanner.getPrevioustoken().getTokenvalue().equals("else"))
+            {
+                stmt_sequence();
+            }
+            match("end");
+            System.out.println("if statement compiled successfully");
+
+        }
+        private void repeat_stmt() throws Exception {
+        stmt_sequence();
+        match("until");
+        exp();
+            System.out.println("repeat statement compiled successfully");
+
+        }
+        private void assign_stmt() throws Exception {
+        match(TokenType.Assignment_Operator);
+        exp();
+            System.out.println("assign statement compiled successfully");
+
+        }
+        private void write_stmt()throws Exception{
+            exp();
+            System.out.println(" write statement compiled successfully");
+
+        }
+        private void read_stmt()throws Exception
+        {
+            match(TokenType.Identifier);
+            System.out.println("read statement compiled successfully");
+
+        }
+        private void exp() throws Exception {
+            simple_exp();
+            if (scanner.getPrevioustoken().getTokenType() == TokenType.Greater_Than_Operator ||
+                    scanner.getPrevioustoken().getTokenType() == TokenType.Less_Than_Operator ||
+                    scanner.getPrevioustoken().getTokenType() == TokenType.Equal_Operator)
+            {
+                scanner.PeekToken();
+                simple_exp();
+            }
+            System.out.println("exp compiled successfully");
+
+        }
+        private void simple_exp() throws Exception {
+            term();
+            while (scanner.getPrevioustoken().getTokenType()==TokenType.Addition_Operator||
+                    scanner.getPrevioustoken().getTokenType()==TokenType.Subtraction_Operator)
+            {
+                scanner.PeekToken();
+                term();
+            }
+            System.out.println("simple exp compiled successfully");
+
+        }
+        private void term() throws Exception
+        {
+            factor();
+            while (scanner.getPrevioustoken().getTokenType()==TokenType.Multiplication_Operator||
+                    scanner.getPrevioustoken().getTokenType()==TokenType.Division_Operator)
+            {
+                scanner.PeekToken();
+                factor();
+            }
+            System.out.println("term compiled successfully");
+
+        }
+        private void factor() throws Exception
+        {
+           switch (scanner.getPrevioustoken().getTokenType())
+           {
+               case NUM,Identifier:{
+                   scanner.PeekToken();
+               }
+               break;
+               case Open_Bracket:
+               {
+                   scanner.PeekToken();
+                   exp();
+                   match(TokenType.Closed_Bracket);
+               }
+               break;
+           }
+            System.out.println("factor compiled successfully");
+
+        }
+        private void match(TokenType expected)throws Exception
+        {
+            if (scanner.getPrevioustoken().getTokenType()!=expected)
+                throw new Exception("parsing syntax error expected token of type "+expected.toString()+" and got token of type"+
+                        scanner.getPrevioustoken().getTokenType()+" and value"+scanner.getPrevioustoken().getTokenvalue());
+            else scanner.PeekToken();
+        }
+    private void match(String  expected)throws Exception
+    {
+        if (!scanner.getPrevioustoken().getTokenvalue().equals(expected))
+            throw new Exception("parsing syntax error expected token of value "+expected+" and got token of value"+
+                    scanner.getPrevioustoken().getTokenvalue());
+        else scanner.PeekToken();
+    }
 
 }
+//vague enum was to be used if parser was a finite state machine
 enum ParseOptions
 {
 start,Statement,Statement_Sequence,if_statement,repeat_statement,assign_statement,

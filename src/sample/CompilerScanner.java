@@ -6,13 +6,19 @@ import java.util.Locale;
 
 public class CompilerScanner {
     int linenumber=1;
+    private MyToken previoustoken;
     ArrayList<MyToken> Tokens;
     Character[] Special_Characters;
     String [] Reserved_KeyWords={"if","then","else","end","repeat","until","read","write"};
     int startindx=0;
     String code;
+    public MyToken getPrevioustoken()
+    {
+        return this.previoustoken;
+    }
     CompilerScanner(String CodeText)
     {
+
         this.Special_Characters=new Character[]{'*','/','+','-','=','<',';','(',')',':','>','–'};
       //  ArrayList<Character>specialcharacters=new ArrayList()
         this.code=CodeText;
@@ -151,7 +157,8 @@ public class CompilerScanner {
                 break;
             }
         }
-        return new MyToken(tokenType,tokenvalue);
+        previoustoken=new MyToken(tokenType,tokenvalue);
+        return previoustoken;
     }
    public boolean HasMoreTokens()
     {
@@ -170,6 +177,11 @@ public class CompilerScanner {
     public void ResetTokenizer(){
         this.startindx=0;
         this.linenumber=1;
+    }
+    public void PeekToken() throws Exception//peeks to next token if it can still tokenize
+    {
+        if(this.HasMoreTokens())
+            this.NextToken();
     }
 
 }
