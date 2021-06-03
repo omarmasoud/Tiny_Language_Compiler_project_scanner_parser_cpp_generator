@@ -181,6 +181,7 @@ public class CompilerScanner {
     public void ResetTokenizer(){
         this.startindx=0;
         this.linenumber=1;
+        this.Tokens.clear();
     }
     public void PeekToken() throws Exception//peeks to next token if it can still tokenize
     {

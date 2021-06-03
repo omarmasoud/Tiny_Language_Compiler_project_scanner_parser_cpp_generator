@@ -17,6 +17,7 @@ public class CompilerParser {
             //if(!scanner.HasMoreTokens()) return;
             //MyToken CurrentToken=scanner.NextToken();
             program();
+            this.scanner.ResetTokenizer();
 
         }
         private void program() throws Exception {
