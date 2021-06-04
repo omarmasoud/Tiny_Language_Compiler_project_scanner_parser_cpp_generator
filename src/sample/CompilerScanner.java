@@ -131,7 +131,6 @@ public class CompilerScanner {
                             case ';' -> TokenType.Semicolon;
                             default -> tokenType;
                         };
-
                             tokenvalue += code.charAt(startindx);
                             currentstate = DFA_States.End;
                             startindx++;
@@ -161,7 +160,10 @@ public class CompilerScanner {
             }
         }
         previoustoken=new MyToken(tokenType,tokenvalue);
-        Tokens.add(previoustoken);
+        if(previoustoken.getTokenType()!=TokenType.Empty)
+        {
+            Tokens.add(previoustoken);
+        }
         return previoustoken;
     }
    public boolean HasMoreTokens()
@@ -181,6 +183,7 @@ public class CompilerScanner {
     public void ResetTokenizer(){
         this.startindx=0;
         this.linenumber=1;
+        this.Tokens.clear();
     }
     public void PeekToken() throws Exception//peeks to next token if it can still tokenize
     {
@@ -216,6 +219,13 @@ class MyToken
     {
        if(tokenType==TokenType.Empty||this==null)return;
        else System.out.println("TokenType is : "+ this.tokenType.toString()+" TokenValue is : "+ this.tokenvalue);
+    }
+    @Override
+    public String toString()
+    {
+        if(this!=null)
+        return this.tokenType.toString()+"       "+this.tokenvalue+"\n";
+        return "";
     }
 }
 enum DFA_States

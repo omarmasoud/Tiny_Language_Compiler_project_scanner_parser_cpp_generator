@@ -1,29 +1,70 @@
 package sample;
 
+import javafx.scene.Scene;
+import javafx.scene.control.TextArea;
+import javafx.stage.Stage;
+
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Scanner;
 
 public class CompilerParser {
+    String ParseStmt="";
+    TextArea TA;
      CompilerScanner scanner;
+     String CodeBody="";
      ArrayList<String> ProgramStatements;
      ArrayList<String> identifiers;
-    CompilerParser(CompilerScanner scanner){
+    CompilerParser(CompilerScanner scanner,TextArea ParserTA){
+        this.TA=ParserTA;
         this.scanner=scanner;
         ProgramStatements=new ArrayList<>();
         identifiers=new ArrayList<>();
     }
+    public void Generate_Cpp_Code() throws Exception {
+        String Beginning="#include<iostream>\n" +
+                        "using namespace std; \n" +
+                        "int main()\n{\n ";
+        String allidentifier="int ";
+        parse();
+        for (int i = 0; i < this.identifiers.size(); i++) {
+            allidentifier+=identifiers.get(i);
+            if (i==identifiers.size()-1)
+                allidentifier+=";\n";
+            else allidentifier+=",";
+        }
+        String Ending= "return 0;}";
+        Stage newstage=new Stage();
+        TextArea CPPTA=new TextArea();
+        CPPTA.setEditable(false);
+        newstage.setScene(new Scene(CPPTA));
+        CPPTA.appendText(Beginning);
+        CPPTA.setMinSize(800,800);
+        CPPTA.appendText(allidentifier);
+        CPPTA.appendText(this.CodeBody);
+        CPPTA.appendText(Ending);
+        newstage.setTitle("generated cpp code for your tiny language code");
+        newstage.show();
+        //todo continue the code generator
+    }
     public void parse() throws Exception {
+            identifiers.clear();
+            CodeBody="";
             scanner.ResetTokenizer();
            // ParseOptions parserstate=ParseOptions.start;
             //if(!scanner.HasMoreTokens()) return;
             //MyToken CurrentToken=scanner.NextToken();
             program();
+            this.scanner.ResetTokenizer();
 
         }
         private void program() throws Exception {
+        this.ParseStmt="";
             //get the first token of the program to begin compiling
             scanner.PeekToken();
             stmt_sequence();
-            System.out.println("program compiled successfully");
+         ParseStmt+="program compiled successfully\n";
+         this.TA.setText(ParseStmt);
         }
         private void stmt_sequence() throws Exception {
                 statement();
@@ -60,6 +101,10 @@ public class CompilerParser {
                 }break;
                 case Identifier:
                 {
+                    if(!hasIdentifier(scanner.getPrevioustoken().getTokenvalue()))
+                    {
+                        identifiers.add(scanner.getPrevioustoken().getTokenvalue());
+                    }
                     assign_stmt();
                 }
                     break;
@@ -67,69 +112,95 @@ public class CompilerParser {
                     throw new Exception("incorrect statement typing");
                 }
             }
-            System.out.println("statement compiled successfully");
-
+            ParseStmt+="statement compiled successfully\n";
         }
         private void if_stmt() throws Exception {
             match("if");
+            generate("if (");
             exp();
+            generate(") \n");
            // scanner.PeekToken();
             match("then");
+            generate("{\n");
             stmt_sequence();
+            generate("}\n");
             if(scanner.getPrevioustoken().getTokenvalue().equals("else"))
             {
                 match("else");
+                generate("else {\n");
                 stmt_sequence();
+                generate("}\n");
             }
             match("end");
-            System.out.println("if statement compiled successfully");
-
+            ParseStmt+="if statement compiled successfully\n";
         }
         private void repeat_stmt() throws Exception {
         match("repeat");
+            generate("do {\n");
         stmt_sequence();
+            generate("}\n");
         match("until");
+            generate("while (!");
         exp();
-            System.out.println("repeat statement compiled successfully");
-
+            generate(");\n");
+            ParseStmt+="repeat statement compiled successfully\n";
         }
         private void assign_stmt() throws Exception {
+/*            if(!hasIdentifier(scanner.getPrevioustoken().getTokenvalue()))
+            {
+                identifiers.add(scanner.getPrevioustoken().getTokenvalue());
+            }*/
+            generate(scanner.getPrevioustoken().getTokenvalue());
             match(TokenType.Identifier);
             match(TokenType.Assignment_Operator);
+            generate("=");
             exp();
-            System.out.println("assign statement compiled successfully");
+            generate(";\n");
+            ParseStmt+="assign statement compiled successfully\n";
         }
         private void write_stmt()throws Exception{
+            generate("cout<<");
             match("write");
             exp();
-            System.out.println(" write statement compiled successfully");
+            generate("<<endl;");
+            ParseStmt+="write statement compiled successfully\n";
         }
         private void read_stmt()throws Exception
         {
+            generate("cin>>");
             match("read");
+            if(!hasIdentifier(scanner.getPrevioustoken().getTokenvalue()))
+            {
+                identifiers.add(scanner.getPrevioustoken().getTokenvalue());
+            }
+            generate(scanner.getPrevioustoken().getTokenvalue());
             match(TokenType.Identifier);
-            System.out.println("read statement compiled successfully");
+            generate(";\n");
+            ParseStmt+="read statement compiled successfully\n";
         }
         private void exp() throws Exception {
             simple_exp();
             switch (scanner.getPrevioustoken().getTokenType())
             {
                 case Greater_Than_Operator:
+                    generate(">");
                     match(TokenType.Greater_Than_Operator);
                     simple_exp();
                     break;
                 case Less_Than_Operator:
+                    generate("<");
                     match(TokenType.Less_Than_Operator);
                     simple_exp();
                     break;
                 case Equal_Operator:
+                    generate("==");
                     match(TokenType.Equal_Operator);
                     simple_exp();
                     break;
                 default:
                     break;
             }
-            System.out.println("exp compiled successfully");
+            ParseStmt+="exp compiled successfully\n";
         }
         private void simple_exp() throws Exception {
             term();
@@ -139,10 +210,12 @@ public class CompilerParser {
                 switch (scanner.getPrevioustoken().getTokenType())
                 {
                     case Addition_Operator:
+                        generate("+");
                         match(TokenType.Addition_Operator);
                         term();
                         break;
                     case Subtraction_Operator:
+                        generate("-");
                         match(TokenType.Subtraction_Operator);
                         term();
                         break;
@@ -150,22 +223,20 @@ public class CompilerParser {
                         break;
                 }
             }
-            System.out.println("simple exp compiled successfully");
-
+            ParseStmt+="simple exp compiled successfully\n";
         }
-        private void term() throws Exception
-        {
+        private void term() throws Exception {
             factor();
-            while (scanner.getPrevioustoken().getTokenType()==TokenType.Multiplication_Operator||
-                    scanner.getPrevioustoken().getTokenType()==TokenType.Division_Operator)
-            {
-                switch (scanner.getPrevioustoken().getTokenType())
-                {
+            while (scanner.getPrevioustoken().getTokenType() == TokenType.Multiplication_Operator ||
+                    scanner.getPrevioustoken().getTokenType() == TokenType.Division_Operator) {
+                switch (scanner.getPrevioustoken().getTokenType()) {
                     case Multiplication_Operator:
+                        generate("*");
                         match(TokenType.Multiplication_Operator);
                         factor();
                         break;
                     case Division_Operator:
+                        generate("/");
                         match(TokenType.Division_Operator);
                         factor();
                         break;
@@ -173,7 +244,7 @@ public class CompilerParser {
                         break;
                 }
             }
-            System.out.println("term compiled successfully");
+            ParseStmt += "term compiled successfully\n";
         }
         private void factor() throws Exception
         {
@@ -181,24 +252,32 @@ public class CompilerParser {
            {
                case NUM:
                {
+                   generate(scanner.getPrevioustoken().getTokenvalue());
                    match(TokenType.NUM);
                }
                break;
                case Identifier:
                {
+                   if(!hasIdentifier(scanner.getPrevioustoken().getTokenvalue()))
+                   {
+                       throw new Exception(scanner.getPrevioustoken().getTokenvalue()+" is not defined");
+                   }
+                   generate(scanner.getPrevioustoken().getTokenvalue());
                    match(TokenType.Identifier);
                }
                break;
                case Open_Bracket:
                {
+                   generate("(");
                    match(TokenType.Open_Bracket);
                    exp();
+                   generate("(");
                    match(TokenType.Closed_Bracket);
                }
                break;
                default:throw new Exception ("not a factor type of token"+scanner.getPrevioustoken().getTokenvalue());
            }
-            System.out.println("factor compiled successfully");
+           ParseStmt+="factor compiled successfully\n";
         }
         private void match(TokenType expected)throws Exception
         {
@@ -214,8 +293,20 @@ public class CompilerParser {
                     scanner.getPrevioustoken().getTokenvalue());
         else scanner.PeekToken();
     }
-
+    private void generate(String NewEntry)
+    {
+        this.CodeBody+=NewEntry;
+    }
+    private boolean hasIdentifier(String identifier)
+    {
+        for (int i = 0; i < this.identifiers.size(); i++) {
+            if(identifiers.get(i).equals(identifier))
+                return true;
+        }
+        return false;
+    }
 }
+
 //vague enum was to be used if parser was a finite state machine
 enum ParseOptions
 {
